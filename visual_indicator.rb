@@ -114,6 +114,10 @@ class VisualIndicator
     read_command(10)
   end
   
+  def read_switch_counter
+    read_command(8)[0]
+  end
+  
     
   def sync_leds(in_on_state, in_off_state=0)
     write_command(25, :DataMSB => in_off_state, :DataLSB => in_on_state)
