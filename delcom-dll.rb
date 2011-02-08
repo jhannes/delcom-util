@@ -28,6 +28,12 @@ module DelcomDLL
     result == 0 or raise "closeDevice(#{handle}) failed: #{result}"
   end
   
+  DelcomBuzzer = Win32API.new("DelcomDLL", "DelcomBuzzer", %(l n n n n n), 'l')
+  def self.delcomBuzzer(handle, mode, freq, repeat, onTime, offTime)
+    result = DelcomBuzzer.Call(handle, mode, freq, repeat, onTime, offTime)
+    result == 0 or raise "delcomBuzzer(#{handle}) failed: #{result}"
+  end
+  
   DelcomSendPacket = Win32API.new("DelcomDLL", "DelcomSendPacket", %w(l p p), 'l')
   def self.sendPacket(handle, properties)
     default_properties = { 
