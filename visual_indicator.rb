@@ -19,6 +19,14 @@ class VisualIndicator
       [0, 1, 2].include? light_offset or raise "Illegal light_offset #{light_offset}"
     end
     
+    def execute(args)
+      case args[0].downcase
+        when "flash" then flash(args[1] && args[1].to_i, args[2] && args[2].to_i, args[3] && args[3].to_i)
+        when "on" then on(args[1] && args[1].to_i)
+        when "off" then off
+      end
+    end
+    
     def off
       write_command(20,  :DataLSB => @light)
       write_command(12,  :DataMSB => @light)
@@ -77,6 +85,9 @@ class VisualIndicator
     def off
       @leds.each { |l| l.off }
     end
+    def execute(args)
+      @leds.each { |l| l.off }
+    end
   end
   
   def initialize(deviceName)
@@ -89,12 +100,32 @@ class VisualIndicator
   end
   
   def self.first; all.first; end
+  def self.last; all.last; end
   
   def red; Led.new(self, RED, REDLED); end
   def green; Led.new(self, GREEN, GREENLED); end
   def yellow; Led.new(self, BLUE, BLUELED); end
   def blue; Led.new(self, BLUE, BLUELED); end
   def all; All.new(self, [red, green, yellow]); end
+  
+  def parse_command(indicators_as_string)
+    all.off
+    indicators_as_string.each_line do
+      |line|
+      command = line.strip.split
+      self[command[0]].execute(command[1..-1]) if command[0]
+    end  
+  end
+  
+  def [](color)
+    case color.downcase
+      when "red" then red
+      when "green" then green
+      when "blue" then blue
+      when "yellow" then yellow
+      when "all" then all
+    end
+  end
   
   def serial_number
     firmware_info = read_firmware_info
@@ -124,12 +155,17 @@ class VisualIndicator
   end
 
   def start_buzzer(frequency, repeat, onTime, offTime)
-    write_command(:DataLSB => 1,
-      :DataMSB => frequency, :ExtData => [repeat, onTime, offTime, 0, 0, 0, 0, 0])
+    handle = @handle || DelcomDLL::openDevice(@deviceName)
+    output = DelcomDLL::delcomBuzzer(handle, 1, frequency, repeat, onTime, offTime)
+    DelcomDLL::closeDevice(handle) unless @handle
+    output
   end
   
   def stop_buzzer
-    write_command(70,  :DataLSB => 0)
+    handle = @handle || DelcomDLL::openDevice(@deviceName)
+    output = DelcomDLL::delcomBuzzer(handle, 0, 0, 0, 0, 0)
+    DelcomDLL::closeDevice(handle) unless @handle
+    output
   end
   
   def write_command(command, properties = {})
