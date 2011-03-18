@@ -15,43 +15,60 @@ END {
   $led.all.off
 }
 
-$status = :none
+Status = Struct.new(:led_color, :is_building, :is_error, :was_aborted)
 
-def status(new_status)
-  return if new_status == $status
-  $status = new_status
-  case $status
-    when :ok then $led.all.off; $led.green.on 100
-    when :build_from_ok then $led.all.off; $led.green.flash 50,50,100
-    when :fail then $led.all.off; $led.yellow.on 100
-    when :build_from_fail then $led.all.off; $led.yellow.flash 50,50,100
-    when :error then $led.all.off; $led.red.on 100
-    when :build_from_error then $led.all.off; $led.red.flash 50,50,100
-    when :system_error then $led.all.off; $led.red.flash 10, 10, 100
-    else $led.all.off; $led.red.flash 5, 5, 100
+$new_status = $status = Status.new("green", false, false)
+
+def update_status(step)
+  if $status != $new_status
+    puts $new_status
+	$status = $new_status
+	$led.all.off
+	if $status.is_error
+	  $led.red.flash 10, 10, 100
+	else
+	  $led.yellow.on 100 if $status.was_aborted
+	  $led[$status.led_color].on $status.is_building ? step : 80
+	end
+  elsif $status.is_building
+    $led[$status.led_color].on step
   end
 end
 
+Thread.new do
+  steps = [5,7,8,10,20,30,40,50,60,70,80,90,100]
+  steps += steps.reverse
+  while true
+    begin
+      steps.each { |step| update_status(step); sleep 0.1 }
+    rescue => e
+      puts e
+	end
+  end
+end
+
+
+LED_COLOR = {
+	"blue" => "green", "blue_anime" => "green", 
+	"yellow" => "yellow", "yellow_anime" => "yellow",
+	"red" => "red", "red_anime" => "red",
+	"aborted" => "green", "aborted_anime" => "green",
+}
 
 while true
   begin
     open(status_url) do |f|
       doc = REXML::Document.new(f)
       color = doc.elements["mavenModuleSet/color"].text
-      puts color
-      case color
-        when "blue" then status(:ok)
-        when "blue_anime" then status(:build_from_ok)
-        when "yellow" then status(:fail)
-        when "yellow_anime" then status(:build_from_fail)
-        when "red" then status(:error)
-        when "red_anime" then status(:build_from_error)
-        else status(:unknown)
-      end
+	  $new_status = Status.new(
+		LED_COLOR[color],
+		color =~ /_anime$/, 		
+		!LED_COLOR.key?(color),
+		color =~ /^aborted/)
     end
   rescue => e
     puts "Could not access #{ARGV[0]}: #{e.message}"
-    status(:system_error)
+    $new_status = Status.new("red", false, true, false)
   end
-  sleep (ARGV[2] || "1").to_i
+  sleep (ARGV[2] || "5").to_i
 end
