@@ -22,14 +22,14 @@ $new_status = $status = Status.new("green", false, false)
 def update_status(step)
   if $status != $new_status
     puts $new_status
-	$status = $new_status
-	$led.all.off
-	if $status.is_error
-	  $led.red.flash 10, 10, 100
-	else
-	  $led.yellow.on 100 if $status.was_aborted
-	  $led[$status.led_color].on $status.is_building ? step : 80
-	end
+    $status = $new_status
+    $led.all.off
+    if $status.is_error
+      $led.red.flash 10, 10, 100
+    else
+      $led.yellow.on 100 if $status.was_aborted
+      $led[$status.led_color].on $status.is_building ? step : 80
+    end
   elsif $status.is_building
     $led[$status.led_color].on step
   end
