@@ -1,4 +1,4 @@
-require 'delcom-dll'
+require './delcom-dll'
 
 
 class VisualIndicator

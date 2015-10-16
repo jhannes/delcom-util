@@ -1,4 +1,4 @@
-require 'visual_indicator'
+require './visual_indicator'
 require 'open-uri'
 
 # Usage

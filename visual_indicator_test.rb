@@ -1,4 +1,4 @@
-require 'visual_indicator'
+require './visual_indicator'
 
 for lamp in VisualIndicator.all
   lamp.open_device
