@@ -5,9 +5,11 @@ class VisualIndicator
   GREENLED = 0
   REDLED = 1
   BLUELED = 2
+  YELLOWLED = 2
   
   GREEN = 1
   RED = 2
+  YELLOW = 4
   BLUE = 4
 
   class Led
@@ -104,14 +106,16 @@ class VisualIndicator
   
   def red; Led.new(self, RED, REDLED); end
   def green; Led.new(self, GREEN, GREENLED); end
-  def yellow; Led.new(self, BLUE, BLUELED); end
+  def yellow; Led.new(self, YELLOW, YELLOWLED); end
   def blue; Led.new(self, BLUE, BLUELED); end
-  def all; All.new(self, [red, green, yellow]); end
+  def all; All.new(self, [red, green, yellow, blue]); end
   
   def parse_command(indicators_as_string)
     all.off
     indicators_as_string.each_line do
       |line|
+      print line
+      next if line.strip.start_with? "#"
       command = line.strip.split
       self[command[0]].execute(command[1..-1]) if command[0]
     end  

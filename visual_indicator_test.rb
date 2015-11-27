@@ -2,8 +2,8 @@ require './visual_indicator'
 
 for lamp in VisualIndicator.all
   lamp.open_device
-  lamp.start_buzzer(2, 2, 6, 2)
-  lamp.stop_buzzer
+  #lamp.start_buzzer(2, 2, 6, 2)
+  #lamp.stop_buzzer
 
   lamp.red.flash
   lamp.red.on(10)
